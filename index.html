@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="author" content="Pengyong Zhan">
+  <meta name="email" content="zhan0789@algonquinlive.com">
+  <title>D3 Data Viz</title>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <style>
+    .chart-title {
+      font-size: 18px;
+      font-weight: bold;
+      fill: #5c5c5c;
+    }
+
+    .x-axis-title, .y-axis-title {
+      font-size: 16px;
+      fill: #5c5c5c;
+    }
+
+    .legend-text {
+      font-size: 12px;
+      fill: #666666;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="mt-6 is-flex is-justify-content-center is-align-items-center is-flex-direction-column">
+    <div>
+      <h1 class="title m-5">There Is no 'Y' in Happiness.</h1>
+      <h3 class="subtitle m-5">It's an 'I'.</h3>
+    </div>
+    <div id="container" class="m-5 mt-6"></div>
+  </div>
+  
+
+  <script>
+    const data = [
+      {income: 15000, lifeSatisfaction: -0.35, experiencedWellbeing: -0.205},
+      {income: 29000, lifeSatisfaction: -0.34, experiencedWellbeing: -0.13},
+      {income: 36000, lifeSatisfaction: -0.18, experiencedWellbeing: -0.1},
+      {income: 48000, lifeSatisfaction: -0.15, experiencedWellbeing: -0.05},
+      {income: 58000, lifeSatisfaction: -0.08, experiencedWellbeing: -0.02},
+      {income: 63000, lifeSatisfaction: -0.03, experiencedWellbeing: -0.01},
+      {income: 75000, lifeSatisfaction: -0.01, experiencedWellbeing: -0.01},
+      {income: 83000, lifeSatisfaction: 0.03, experiencedWellbeing: 0.01},
+      {income: 100000, lifeSatisfaction: 0, experiencedWellbeing: -0.03},
+      {income: 120000, lifeSatisfaction: 0.08, experiencedWellbeing: 0.02},
+      {income: 132000, lifeSatisfaction: 0.17, experiencedWellbeing: 0.07},
+      {income: 190000, lifeSatisfaction: 0.18, experiencedWellbeing: 0.1},
+      {income: 240000, lifeSatisfaction: 0.28, experiencedWellbeing: 0.17},
+      {income: 420000, lifeSatisfaction: 0.35, experiencedWellbeing: 0.19},
+      {income: 600000, lifeSatisfaction: 0.4, experiencedWellbeing: 0.28}
+    ];
+
+    // Set colors
+    const blue = "#6DB1FA";
+    const yellow = "#FFCF69";
+
+    // Set up chart dimensions
+    const width = 600;
+    const height = 300;
+    const margin = { top: 40, right: 20, bottom: 50, left: 80 };
+
+    // Create SVG container
+    const svg = d3.select("#container")
+      .append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+      .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    // Create scales
+    const xScale = d3.scaleLinear()
+      .domain([0, d3.max(data, d => d.income)])
+      .range([0, width]);
+
+    
+    const yMin = Math.min(
+          Math.floor(d3.min(data, d => d.experiencedWellbeing) * 10) / 10, 
+          Math.floor(d3.min(data, d => d.lifeSatisfaction) * 10) / 10)
+
+    const yMax = Math.max(
+          Math.ceil(d3.max(data, d => d.experiencedWellbeing) * 10) /10, 
+          Math.ceil(d3.max(data, d => d.lifeSatisfaction) *10 ) / 10)
+
+    const yScale = d3.scaleLinear()
+      .domain([yMin, yMax])
+      .range([height, 0]);
+
+
+    // Create line generator
+    const line_exW = d3.line()
+      .x(d => xScale(d.income))
+      .y(d => yScale(d.experiencedWellbeing));
+
+    const line_lfS = d3.line()
+      .x(d => xScale(d.income))
+      .y(d => yScale(d.lifeSatisfaction));
+
+    const verticalLineX = xScale(75000);
+
+    
+    //marker
+    svg.selectAll(".circle-marker")
+      .data(data)
+      .enter()
+      .append("circle")
+      .attr("class", "circle-marker")
+      .attr("cx", d => xScale(d.income))
+      .attr("cy", d => yScale(d.experiencedWellbeing))
+      .attr("r", 3) 
+      .attr("fill", yellow);
+
+    svg.selectAll(".square-marker")
+      .data(data)
+      .enter()
+      .append("rect")
+      .attr("class", "square-marker")
+      .attr("x", d => xScale(d.income) - 4)
+      .attr("y", d => yScale(d.lifeSatisfaction) - 4)
+      .attr("width", 6)
+      .attr("height", 6)
+      .attr("fill", blue);
+
+      
+    // Append the line to the chart
+    svg.append("path")
+      .data([data])
+      .attr("class", "line")
+      .attr("d", line_exW)
+      .attr("fill", "none")
+      .attr("stroke", yellow);
+
+    svg.append("path")
+      .data([data])
+      .attr("class", "line")
+      .attr("d", line_lfS)
+      .attr("fill", "none")
+      .attr("stroke", blue);
+
+    svg.append("line")
+      .attr("class", "vertical-line")
+      .attr("x1", verticalLineX)
+      .attr("x2", verticalLineX)
+      .attr("y1", yScale(yMin))
+      .attr("y2", yScale(yMax))
+      .attr("stroke", "#D7D7D7")
+      .attr("stroke-width", 2)
+      .attr("stroke-dasharray", "5 5");
+
+    // Add x-axis
+    svg.append("g")
+      .attr("transform", `translate(0, ${height})`)
+      .call(d3.axisBottom(xScale).tickFormat(d => (d / 1000) + 'K').ticks(6).tickSizeInner(-6).tickPadding(12))
+      .selectAll("text")
+      .style("font-size", "12px");
+
+    // Add y-axis
+    svg.append("g")
+      .call(d3.axisLeft(yScale).ticks(4).tickSizeInner(-6).tickPadding(12))
+      .selectAll("text")
+      .style("font-size", "12px"); 
+
+    // Add Title
+    svg.append("text")
+      .attr("x", width / 2)  
+      .attr("y", -18)  
+      .attr("text-anchor", "middle") 
+      .attr("class", "chart-title")
+      .text("Income and Happiness");
+
+    // Add xAxis title
+    svg.append("text")
+      .attr("x", width / 2)
+      .attr("y", height + margin.bottom - 1)
+      .attr("text-anchor", "middle")
+      .attr("class", "x-axis-title")
+      .text("Household Income");
+
+    // Add yAxis title
+    svg.append("text")
+      .attr("transform", "rotate(-90)") 
+      .attr("x", -height / 2)
+      .attr("y", -margin.left / 2 - 10)
+      .attr("text-anchor", "middle")
+      .attr("class", "y-axis-title")
+      .text("z-scored well-being");
+
+    // Add Legend
+    const legend = svg.append("g")
+      .attr("class", "legend")
+      .attr("transform", `translate(${width - margin.right - 116}, ${height - margin.bottom - 10})`);
+
+    // Add legend 1
+    legend.append("rect")
+      .attr("x", 0)
+      .attr("width", 6)
+      .attr("height", 6)
+      .attr("fill", blue); 
+
+    legend.append("text")
+      .attr("x", 15)
+      .attr("y", 7)
+      .attr("class", "legend-text")
+      .text("Life Satisfaction"); 
+
+    // Add legend 2
+    legend.append("rect")
+      .attr("x", 0)
+      .attr("y", 20)
+      .attr("width", 6)
+      .attr("height", 6)
+      .attr("fill", yellow);
+
+    legend.append("text")
+      .attr("x", 15)
+      .attr("y", 27)
+      .attr("class", "legend-text")
+      .text("Experienced Well-being");
+
+  </script>
+
+</body>
+</html>
